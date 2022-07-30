@@ -30,13 +30,13 @@ def calc_strength(guess, target) -> int:
         if lhs != rhs:
             return matching_digits
 
-            
+
 def calc_strength(guess, target) -> int:
     """Calculate the strength of an address guess"""
     strength = 0
     for lhs, rhs in zip(guess, target):
         strength += 1 if lhs == rhs else 0
-    return strength        
+    return strength
 
 
 class SigningKey(ecdsa.SigningKey):
@@ -208,15 +208,16 @@ def main(fps, timeout, max_guesses, addresses, port, no_port, strategy, quiet, e
                              address,
                              newline=True)
                 varz.best_score = current
-                
+
                 best_guess_report = {
                     'private-key': priv.hexlify_private(),
+                    'public-key': priv.hexlify_public(),
                     'address': address,
                 }
                 if closest is not None:
                     best_guess_report['closest'] = 'https://etherscan.io/address/0x%s' % (closest,)
                 varz.best_guess = best_guess_report
-                    
+
     except KeyboardInterrupt:
         pass
 
