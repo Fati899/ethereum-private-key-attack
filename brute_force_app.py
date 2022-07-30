@@ -20,8 +20,6 @@ import lookups
 import monitoring
 import targets
 
-keccak = sha3.keccak_256()
-
 
 ETH_ADDRESS_LENGTH = 40
 
@@ -177,6 +175,7 @@ def main(fps, timeout, addresses, port, no_port, strategy, quiet, eth_address):
             priv = SigningKey.generate(curve=ecdsa.SECP256k1)
             pub = priv.get_verifying_key().to_string()
 
+            keccak = sha3.keccak_256()
             keccak.update(pub)
             address = keccak.hexdigest()[24:]
 
