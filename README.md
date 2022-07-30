@@ -13,13 +13,21 @@ While running, the script shows its guesses WarGames-style.
 Usage: brute_force_app.py [OPTIONS] [ETH_ADDRESS]...
 
 Options:
-  --port INTEGER        Monitoring port
-  --addresses FILENAME  Filename for yaml file containing target addresses.
-  --timeout INTEGER     If set to a positive integer, stop trying after this
-                        many seconds.
-  --fps INTEGER         Use this many frames per second when showing guesses.
-                        Use non-positive number to go as fast as possible.
-  --help                Show this message and exit.
+  --quiet                         Skip the animation
+  --strategy [trie|nearest|bisect]
+                                  Choose a lookup strategy for eth addresses
+  --no-port                       Disable monitoring port.
+  --port INTEGER                  Monitoring port for runtime metrics.
+  --addresses FILENAME            Filename for yaml file containing target
+                                  addresses.
+  --max-guesses INTEGER           If set to a positive integer, stop trying
+                                  after this many attempts.
+  --timeout INTEGER               If set to a positive integer, stop trying
+                                  after this many seconds.
+  --fps INTEGER                   Use this many frames per second when showing
+                                  guesses.  Use non-positive number to go as
+                                  fast as possible.
+  --help                          Show this message and exit.
 ```
 
 Thanks to
