@@ -63,7 +63,7 @@ def GetResourcePath(*path_fragments):
     return os.path.join(base_dir, 'data', *path_fragments)
 
 
-def EchoLine(duration, attempts, private_key, strength, address, newline=False):
+def EchoLine(duration, attempts, private_key, strength, address, closest, newline=False):
     """Write a guess to the console."""
     click.secho('\r%012.6f %08x %s % 3d ' % (duration,
                                              attempts,
@@ -72,16 +72,18 @@ def EchoLine(duration, attempts, private_key, strength, address, newline=False):
                 nl=False)
     # FIXME show matching digits not just leading digits
     click.secho(address[:strength], nl=False, bold=True)
-    click.secho(address[strength:], nl=newline)
+    click.secho(address[strength:], nl=False)
+    click.secho(' %- s' % closest, nl=newline)
 
 
 def EchoHeader():
     """Write the names of the columns in our output to the console."""
-    click.secho('%-12s %-8s %-64s %-3s %-3s' % ('duration',
-                                                'attempts',
-                                                'private-key',
-                                                'str',
-                                                'address'))
+    click.secho('%-12s %-8s %-64s %-3s %-40s %-40s' % ('duration',
+                                                       'attempts',
+                                                       'private-key',
+                                                       'str',
+                                                       'address',
+                                                       'closest'))
 
 @click.option('--fps',
               default=60,
@@ -194,7 +196,8 @@ def main(fps, timeout, max_guesses, addresses, port, no_port, strategy, quiet, e
                              varz.num_tries,
                              priv.hexlify_private(),
                              strength,
-                             address)
+                             address,
+                             closest)
                 last_frame = now
 
             # the current guess was as close or closer to a valid ETH address
@@ -206,6 +209,7 @@ def main(fps, timeout, max_guesses, addresses, port, no_port, strategy, quiet, e
                              priv.hexlify_private(),
                              strength,
                              address,
+                             closest,
                              newline=True)
                 varz.best_score = current
 
