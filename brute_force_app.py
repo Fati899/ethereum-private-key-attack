@@ -86,14 +86,18 @@ def EchoHeader():
               help='Filename for yaml file containing target addresses.')
 @click.option('--port',
               default=8120,
-              help='Monitoring port')
+              help='Monitoring port for runtime metrics.')
+@click.option('--no-port',
+              is_flag=True,
+              default=False,
+              help='Disable monitoring port.')
 @click.option('--quiet',
               default=False,
               is_flag=True,
               help='Skip the animation')
 @click.argument('eth_address', nargs=-1)
 @click.command()
-def main(fps, timeout, addresses, port, quiet, eth_address):
+def main(fps, timeout, addresses, port, no_port, quiet, eth_address):
     if eth_address:
         click.echo('Attacking specific ETH addresses: ', nl=False)
         addresses = [address.lower() for address in eth_address]
@@ -104,7 +108,7 @@ def main(fps, timeout, addresses, port, quiet, eth_address):
     click.echo('%d found.\n' % (len(target_addresses)))
 
     httpd = monitoring.Server()
-    varz = httpd.Start('', port)
+    varz = httpd.Start('', 0 if no_port else port)
 
     varz.fps = fps
     varz.timeout = timeout if timeout > 0 else 'forever'
