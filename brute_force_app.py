@@ -28,6 +28,7 @@ ETH_ADDRESS_LENGTH = 40
 
 
 def format_eth_public_address(bin_addr):
+    """Consistent formatting for a binary address."""
     return '%040x' % bin_addr
 
 
