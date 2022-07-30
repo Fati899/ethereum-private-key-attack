@@ -60,7 +60,7 @@ class EthereumAddressTrie(object):
         """
         rest = []
         trie = self._value
-        for count, char in enumerate(address):
+        for count, char in enumerate(hex_address):
             if char not in trie:
                 break
             trie = trie[char]
@@ -68,7 +68,7 @@ class EthereumAddressTrie(object):
         # return the lowest numbered match
         nearest_match = None
         
-        return count, address, nearest_match
+        return count, hex_address, nearest_match
 
 
 class EthereumAddressNearestDict(object):
