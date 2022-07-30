@@ -27,6 +27,9 @@ class Trie(object):
           \-> c -> d -> e
                     \-> f
          c -> d -> e -> f
+         
+    This provides a much smaller memory footprint, but does not provide
+    information on the nearest match.
     """
     def __init__(self, list_of_addresses=None):
         self._size = 0
@@ -65,14 +68,16 @@ class Trie(object):
                 break
             trie = trie[char]
             
-        # return the lowest numbered match
+        # TODO walk the rest of the way down the trie to find the closest match
         nearest_match = None
-        
         return count, hex_address, nearest_match
 
 
 class NearestDict(object):
-    """Similar to EthereumAddressTrie, but use a NearestDict instead."""
+    """Similar to EthereumAddressTrie, but use a NearestDict instead.
+    
+    Equivalent speed, easily provides nearest match, uses standard library.
+    """
     def __init__(self, list_of_addresses=None):
         self._size = 0
         self._value = sortedcollections.NearestDict(
@@ -94,7 +99,11 @@ class NearestDict(object):
         
         strength = 0
         for lhs, rhs in zip(hex_address, nearest_match):
-            strength += 1 if lhs == rhs else 0
+            # TODO return list of matches rather than integer so it's not just leading matches
+            # strength += 1 if lhs == rhs else 0
+            if lhs != rhs:
+                break
+            strength += 1    
             
         return strength, hex_address, nearest_match
         
