@@ -91,6 +91,10 @@ def EchoHeader():
               default=-1,
               help='If set to a positive integer, stop trying after this many '
                    'seconds.')
+@click.option('--max-guesses',
+              default=0,
+              help='If set to a positive integer, stop trying  after this many '
+                   'attempts.')
 @click.option('--addresses',
               type=click.File('r'),
               default=GetResourcePath('addresses.yaml'),
@@ -112,7 +116,7 @@ def EchoHeader():
               help='Skip the animation')
 @click.argument('eth_address', nargs=-1)
 @click.command()
-def main(fps, timeout, addresses, port, no_port, strategy, quiet, eth_address):
+def main(fps, timeout, max_guesses, addresses, port, no_port, strategy, quiet, eth_address):
     if eth_address:
         click.echo('Attacking specific ETH addresses: ', nl=False)
         addresses = [address.lower() for address in eth_address]
@@ -168,6 +172,8 @@ def main(fps, timeout, addresses, port, no_port, strategy, quiet, eth_address):
             now = time.perf_counter()
             varz.elapsed_time = now - start_time
             if (timeout > 0) and (start_time + timeout < now):
+                break
+            if (max_guesses) and (varz.num_tries >= max_guesses):
                 break
 
             varz.num_tries += 1
