@@ -88,6 +88,8 @@ Strength     : 4 of 40 digits (10.00%)
 $ deactivate
 ```
 
+### Don't pollute your development environment
+
 Not recommended: you can skip the `virtualenv` steps and install the
 necessary dependencies to your system's python3 distribution:
 
@@ -129,6 +131,29 @@ $ cat YOUR_YAML_FILE | docker run -i -p 80:8120 evilegg/ethereum-private-key-att
 6. You can also skip the animations, but what fun is that?
 ```bash
 $ docker run evilegg/ethereum-private-key-attack ./brute_force_app.py --quiet
+```
+
+## Strategies
+
+Currently, there are three strategies for looking up private key guesses against the known list of public addresses.
+
+## Monitoring
+
+If you specify a `--port` command line argument, the app listens on that port
+for HTTP GETs and will return some basic run-time statistics.
+
+## Validity
+
+You can confirm address generation using [this link](https://www.rfctools.com/ethereum-address-test-tool/).
+Copy and paste the `private-key` and compare against `address`:
+
+```
+» ./brute_force_app.py
+Loading known public ETH addresses375276 found.
+
+web-server on: ('', 8120)
+duration     attempts private-key                                                      str address
+00000.000187 00000001 d88d5d4dc45ce8e392908758e36f0b6c3def14b065d87565176fa574329eeb6e   4 720a519a2ffcf4109661a3a6de4aec66db1340f3
 ```
 
 ## Troubleshooting
