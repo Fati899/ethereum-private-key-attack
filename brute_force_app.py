@@ -195,9 +195,7 @@ def main(fps, timeout, addresses, port, no_port, quiet, eth_address):
                         'private-key': priv.hexlify_private(),
                         'public-key': priv.hexlify_public(),
                         'address': address,
-                        'url': 'https://etherscan.io/address/0x%s' % (address,),
-                        'closest-address': closest,
-                        'closest-url': 'https://etherscan.io/address/0x%s' % (closest,),
+                        'closest': 'https://etherscan.io/address/0x%s' % (closest,),
                     }
 
     except KeyboardInterrupt:
