@@ -10,7 +10,7 @@ import sys
 import sortedcollections
 
 
-class EthereumAddressTrie(object):
+class Trie(object):
     """Convert a list of target addresses into a trie.
 
     Encoding the the target addresses as the prefixes in the trie allows
@@ -71,7 +71,7 @@ class EthereumAddressTrie(object):
         return count, hex_address, nearest_match
 
 
-class EthereumAddressNearestDict(object):
+class NearestDict(object):
     """Similar to EthereumAddressTrie, but use a NearestDict instead."""
     def __init__(self, list_of_addresses=None):
         self._size = 0

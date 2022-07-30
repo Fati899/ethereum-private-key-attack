@@ -120,8 +120,8 @@ def main(fps, timeout, addresses, port, no_port, use_trie, quiet, eth_address):
         addresses = [address.lower() for address in eth_address]
     else:
         click.echo('Loading known public ETH addresses: ', nl=False)
-    addr_lookup = lookups.EthereumAddressTrie if use_trie else lookups.EthereumAddressNearestDict
-    target_addresses = addr_lookup(targets.targets(addresses))
+    lookup_strategy = lookups.Trie if use_trie else lookups.NearestDict
+    target_addresses = lookup_strategy(targets.targets(addresses))
     click.echo('%d found (%s bytes).\n' % (len(target_addresses),
                                            target_addresses.sizeof()))
 
