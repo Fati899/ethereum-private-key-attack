@@ -194,7 +194,7 @@ You can confirm address generation using [this link](https://www.rfctools.com/et
 Copy and paste the `private-key` and compare against `address`:
 
 ```
-» ./brute_force_app.py 
+» ./brute_force_app.py
 Loading known public ETH addresses375276 found.
 
 web-server on: ('', 8120)

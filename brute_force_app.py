@@ -25,6 +25,8 @@ keccak = sha3.keccak_256()
 
 
 ETH_ADDRESS_LENGTH = 40
+
+
 def format_eth_public_address(bin_addr):
     return '%040x' % bin_addr
 
