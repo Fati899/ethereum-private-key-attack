@@ -111,8 +111,10 @@ def main(fps, timeout, addresses, port, no_port, quiet, eth_address):
     else:
         click.echo('Loading known public ETH addresses: ', nl=False)
     #target_addresses = trie.EthereumAddressTrie(targets.targets(addresses))
-    target_addresses = sortedcollections.NearestDict({int(addr, 16): True for addr in targets.targets(addresses)})
-    click.echo('%d found.\n' % (len(target_addresses)))
+    target_addresses = sortedcollections.NearestDict(
+        {int(addr, 16): True for addr in targets.targets(addresses)})
+    click.echo('%d found (%s bytes).\n' % (len(target_addresses),
+                                           sys.getsizeof(target_addresses)))
 
     httpd = monitoring.Server()
     varz = httpd.Start('', 0 if no_port else port)
