@@ -16,9 +16,9 @@ import ecdsa
 import sha3
 import yaml
 
+import lookups
 import monitoring
 import targets
-import trie
 
 keccak = sha3.keccak_256()
 
@@ -120,7 +120,7 @@ def main(fps, timeout, addresses, port, no_port, use_trie, quiet, eth_address):
         addresses = [address.lower() for address in eth_address]
     else:
         click.echo('Loading known public ETH addresses: ', nl=False)
-    addr_lookup = trie.EthereumAddressTrie if use_trie else trie.EthereumAddressNearestDict
+    addr_lookup = lookups.EthereumAddressTrie if use_trie else lookups.EthereumAddressNearestDict
     target_addresses = addr_lookup(targets.targets(addresses))
     click.echo('%d found (%s bytes).\n' % (len(target_addresses),
                                            target_addresses.sizeof()))
