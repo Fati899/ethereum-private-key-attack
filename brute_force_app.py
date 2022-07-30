@@ -14,7 +14,6 @@ import time
 import click
 import ecdsa
 import sha3
-import sortedcollections
 import yaml
 
 import monitoring
@@ -27,16 +26,19 @@ keccak = sha3.keccak_256()
 ETH_ADDRESS_LENGTH = 40
 
 
-def format_eth_public_address(bin_addr):
-    """Consistent formatting for a binary address."""
-    return '%040x' % bin_addr
-
-
 def calc_strength(guess, target) -> int:
     """Calculate the strength of an address guess"""
     for matching_digits, (lhs, rhs) in enumerate(zip(guess, target)):
         if lhs != rhs:
             return matching_digits
+
+            
+def calc_strength(guess, target) -> int:
+    """Calculate the strength of an address guess"""
+    strength = 0
+    for lhs, rhs in zip(guess, target):
+        strength += 1 if lhs == rhs else 0
+    return strength        
 
 
 class SigningKey(ecdsa.SigningKey):
@@ -70,6 +72,7 @@ def EchoLine(duration, attempts, private_key, strength, address, newline=False):
                                              private_key,
                                              strength),
                 nl=False)
+    # FIXME show matching digits not just leading digits
     click.secho(address[:strength], nl=False, bold=True)
     click.secho(address[strength:], nl=newline)
 
@@ -101,23 +104,26 @@ def EchoHeader():
               is_flag=True,
               default=False,
               help='Disable monitoring port.')
+@click.option('--use-trie/--no-trie',
+              is_flag=True,
+              default=False,
+              help='Use legacy address finder.')              
 @click.option('--quiet',
               default=False,
               is_flag=True,
               help='Skip the animation')
 @click.argument('eth_address', nargs=-1)
 @click.command()
-def main(fps, timeout, addresses, port, no_port, quiet, eth_address):
+def main(fps, timeout, addresses, port, no_port, use_trie, quiet, eth_address):
     if eth_address:
         click.echo('Attacking specific ETH addresses: ', nl=False)
         addresses = [address.lower() for address in eth_address]
     else:
         click.echo('Loading known public ETH addresses: ', nl=False)
-    #target_addresses = trie.EthereumAddressTrie(targets.targets(addresses))
-    target_addresses = sortedcollections.NearestDict(
-        {int(addr, 16): True for addr in targets.targets(addresses)})
+    addr_lookup = trie.EthereumAddressTrie if use_trie else trie.EthereumAddressNearestDict
+    target_addresses = addr_lookup(targets.targets(addresses))
     click.echo('%d found (%s bytes).\n' % (len(target_addresses),
-                                           sys.getsizeof(target_addresses)))
+                                           target_addresses.sizeof()))
 
     httpd = monitoring.Server()
     varz = httpd.Start('', 0 if no_port else port)
@@ -167,12 +173,8 @@ def main(fps, timeout, addresses, port, no_port, quiet, eth_address):
             keccak.update(pub)
             address = keccak.hexdigest()[24:]
 
-            bin_addr = int(address, 16)
-            nearest_match = target_addresses.nearest_key(bin_addr)
-            closest = format_eth_public_address(nearest_match)
-
-            strength = calc_strength(address, closest)
-            current = strength, address, closest
+            current = target_addresses.FindClosestMatch(address)
+            strength, _, closest = current
 
             if last_frame + fps < now:
                 if not quiet:
@@ -194,13 +196,15 @@ def main(fps, timeout, addresses, port, no_port, quiet, eth_address):
                              address,
                              newline=True)
                 varz.best_score = current
-                varz.best_guess = {
-                        'private-key': priv.hexlify_private(),
-                        'public-key': priv.hexlify_public(),
-                        'address': address,
-                        'closest': 'https://etherscan.io/address/0x%s' % (closest,),
-                    }
-
+                
+                best_guess_report = {
+                    'private-key': priv.hexlify_private(),
+                    'address': address,
+                }
+                if closest is not None:
+                    best_guess_report['closest'] = 'https://etherscan.io/address/0x%s' % (closest,)
+                varz.best_guess = best_guess_report
+                    
     except KeyboardInterrupt:
         pass
 

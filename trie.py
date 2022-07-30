@@ -4,6 +4,12 @@ ETH addresses.
 """
 
 
+import sys
+
+
+import sortedcollections
+
+
 class EthereumAddressTrie(object):
     """Convert a list of target addresses into a trie.
 
@@ -12,7 +18,7 @@ class EthereumAddressTrie(object):
 
     Each node in the trie corresponds to a prefix in one of the possible
     target addresses.  If there is no path from a node, then there is
-    no matching target addresss.
+    no matching target address.
 
     For example; given the targets [ abcde, abbcd, abcdf, acdef ], the
     resulting trie would look like:
@@ -27,8 +33,14 @@ class EthereumAddressTrie(object):
         self._value = {}
         self.Extend(list_of_addresses or [])
 
+    def __len__(self):
+        return self._size
+
+    def sizeof(self):
+        return sys.getsizeof(self._value)
+
     def Extend(self, list_of_addresses):
-        for target in list_of_addresses:
+        for target in [t.lower() for t in list_of_addresses]:
             self._size += 1
             ptr = self._value
             for digit in target:
@@ -37,10 +49,7 @@ class EthereumAddressTrie(object):
                 ptr = ptr[digit]
         return self._value
 
-    def __len__(self):
-        return self._size
-
-    def Find(self, address):
+    def FindClosestMatch(self, hex_address):
         """Traverse the trie, matching as far as we can.
 
         Args: a potential ETH address
@@ -49,47 +58,43 @@ class EthereumAddressTrie(object):
             number of of leading hex digits that match a target address
             and `address` is the corresponding best match.
         """
+        rest = []
         trie = self._value
         for count, char in enumerate(address):
             if char not in trie:
                 break
             trie = trie[char]
-        return count, address
+            
+        # return the lowest numbered match
+        nearest_match = None
+        
+        return count, address, nearest_match
 
 
-class EthereumAddressTrie2(object):
-    """Similar to EthereumAddressTrie1, but use a sorted list of keys instead."""
+class EthereumAddressNearestDict(object):
+    """Similar to EthereumAddressTrie, but use a NearestDict instead."""
     def __init__(self, list_of_addresses=None):
         self._size = 0
-        self._value = set()
-        self.Extend(list_of_addresses or [])
-        self._frozen_value = []
-
-    def Extend(self, list_of_addresses):
-        self._value.extend(set(list_of_addresses))
-
-    def Freeze(self):
-        self._frozen_value = sorted(self._value)
+        self._value = sortedcollections.NearestDict(
+                {int(addr, 16): True for addr in list_of_addresses})
 
     def __len__(self):
         return len(self._value)
 
-    def Find(self, address):
-        """Traverse the trie, matching as far as we can.
+    def sizeof(self):
+        return sys.getsizeof(self._value)
 
-        Args: a potential ETH address
+    def Extend(self, list_of_addresses):
+        for addr in [t.lower() for t in list_of_addresses]:
+            self._value[int(addr, 16)] = True
 
-        Returns: a tuple of (count, address), where `count` is the
-            number of of leading hex digits that match a target address
-            and `address` is the corresponding best match.
-        """
-
-        # return the number of hexdigits that match and the closest match
-        trie = self._value
-        for count, char in enumerate(address):
-            if char not in trie:
-                break
-            trie = trie[char]
-        return count, address
-
-
+    def FindClosestMatch(self, hex_address):
+        bin_addr = int(hex_address, 16)
+        nearest_match = '%040x' % self._value.nearest_key(bin_addr)
+        
+        strength = 0
+        for lhs, rhs in zip(hex_address, nearest_match):
+            strength += 1 if lhs == rhs else 0
+            
+        return strength, hex_address, nearest_match
+        
