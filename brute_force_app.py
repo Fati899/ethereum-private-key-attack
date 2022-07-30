@@ -29,6 +29,13 @@ def format_eth_public_address(bin_addr):
     return '%040x' % bin_addr
 
 
+def calc_strength(guess, target) -> int:
+    """Calculate the strength of an address guess"""
+    for matching_digits, (lhs, rhs) in enumerate(zip(guess, target)):
+        if lhs != rhs:
+            return matching_digits
+
+
 class SigningKey(ecdsa.SigningKey):
 
     @staticmethod
@@ -159,7 +166,7 @@ def main(fps, timeout, addresses, port, no_port, quiet, eth_address):
             nearest_match = target_addresses.nearest_key(bin_addr)
             closest = format_eth_public_address(nearest_match)
 
-            strength = trie.calc_strength(address, closest)
+            strength = calc_strength(address, closest)
             current = strength, address, closest
 
             if last_frame + fps < now:

@@ -93,7 +93,3 @@ class EthereumAddressTrie2(object):
         return count, address
 
 
-def calc_strength(guess, target):
-    for matching_digits, (lhs, rhs) in enumerate(zip(guess, target)):
-        if lhs != rhs:
-            return matching_digits
