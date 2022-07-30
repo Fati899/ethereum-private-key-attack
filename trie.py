@@ -55,3 +55,45 @@ class EthereumAddressTrie(object):
                 break
             trie = trie[char]
         return count, address
+
+
+class EthereumAddressTrie2(object):
+    """Similar to EthereumAddressTrie1, but use a sorted list of keys instead."""
+    def __init__(self, list_of_addresses=None):
+        self._size = 0
+        self._value = set()
+        self.Extend(list_of_addresses or [])
+        self._frozen_value = []
+
+    def Extend(self, list_of_addresses):
+        self._value.extend(set(list_of_addresses))
+
+    def Freeze(self):
+        self._frozen_value = sorted(self._value)
+
+    def __len__(self):
+        return len(self._value)
+
+    def Find(self, address):
+        """Traverse the trie, matching as far as we can.
+
+        Args: a potential ETH address
+
+        Returns: a tuple of (count, address), where `count` is the
+            number of of leading hex digits that match a target address
+            and `address` is the corresponding best match.
+        """
+
+        # return the number of hexdigits that match and the closest match
+        trie = self._value
+        for count, char in enumerate(address):
+            if char not in trie:
+                break
+            trie = trie[char]
+        return count, address
+
+
+def calc_strength(guess, target):
+    for matching_digits, (lhs, rhs) in enumerate(zip(guess, target)):
+        if lhs != rhs:
+            return matching_digits

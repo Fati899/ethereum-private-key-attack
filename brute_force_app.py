@@ -14,6 +14,7 @@ import time
 import click
 import ecdsa
 import sha3
+import sortedcollections
 import yaml
 
 import monitoring
@@ -24,6 +25,8 @@ keccak = sha3.keccak_256()
 
 
 ETH_ADDRESS_LENGTH = 40
+def format_eth_public_address(bin_addr):
+    return '%040x' % bin_addr
 
 
 class SigningKey(ecdsa.SigningKey):
@@ -69,7 +72,6 @@ def EchoHeader():
                                                 'str',
                                                 'address'))
 
-
 @click.option('--fps',
               default=60,
               help='Use this many frames per second when showing guesses.  '
@@ -97,7 +99,8 @@ def main(fps, timeout, addresses, port, quiet, eth_address):
         addresses = [address.lower() for address in eth_address]
     else:
         click.echo('Loading known public ETH addresses: ', nl=False)
-    target_addresses = trie.EthereumAddressTrie(targets.targets(addresses))
+    #target_addresses = trie.EthereumAddressTrie(targets.targets(addresses))
+    target_addresses = sortedcollections.NearestDict({int(addr, 16): True for addr in targets.targets(addresses)})
     click.echo('%d found.\n' % (len(target_addresses)))
 
     httpd = monitoring.Server()
@@ -148,16 +151,20 @@ def main(fps, timeout, addresses, port, quiet, eth_address):
             keccak.update(pub)
             address = keccak.hexdigest()[24:]
 
-            current = target_addresses.Find(address)
-            strength, _ = current
+            bin_addr = int(address, 16)
+            nearest_match = target_addresses.nearest_key(bin_addr)
+            closest = format_eth_public_address(nearest_match)
+
+            strength = trie.calc_strength(address, closest)
+            current = strength, address, closest
 
             if last_frame + fps < now:
                 if not quiet:
                     EchoLine(now - start_time,
                              varz.num_tries,
                              priv.hexlify_private(),
-                             current[0],
-                             current[1])
+                             strength,
+                             address)
                 last_frame = now
 
             # the current guess was as close or closer to a valid ETH address
@@ -167,8 +174,8 @@ def main(fps, timeout, addresses, port, quiet, eth_address):
                     EchoLine(now - start_time,
                              varz.num_tries,
                              priv.hexlify_private(),
-                             current[0],
-                             current[1],
+                             strength,
+                             address,
                              newline=True)
                 varz.best_score = current
                 varz.best_guess = {
@@ -176,6 +183,8 @@ def main(fps, timeout, addresses, port, quiet, eth_address):
                         'public-key': priv.hexlify_public(),
                         'address': address,
                         'url': 'https://etherscan.io/address/0x%s' % (address,),
+                        'closest-address': closest,
+                        'closest-url': 'https://etherscan.io/address/0x%s' % (closest,),
                     }
 
     except KeyboardInterrupt:
@@ -185,16 +194,16 @@ def main(fps, timeout, addresses, port, quiet, eth_address):
     click.echo('')
     click.echo('Summary')
     click.echo('-------')
-    click.echo('%-14s: %s' % ('Total guesses', varz.num_tries))
-    click.echo('%-14s: %s' % ('Seconds', varz.elapsed_time))
-    click.echo('%-14s: %s' % ('Guess / sec', float(varz.num_tries) / varz.elapsed_time))
-    click.echo('%-14s: %s' % ('Num targets', len(target_addresses)))
+    click.echo('%-20s: %s' % ('Total guesses', varz.num_tries))
+    click.echo('%-20s: %s' % ('Seconds', varz.elapsed_time))
+    click.echo('%-20s: %s' % ('Guess / sec', float(varz.num_tries) / varz.elapsed_time))
+    click.echo('%-20s: %s' % ('Num targets', len(target_addresses)))
     click.echo('')
     click.echo('Best Guess')
     click.echo('----------')
     for key, val in sorted(varz.best_guess.items()):
-        click.echo('%-14s: %s' % (key, val))
-    click.echo('%-14s: %s' % ('Strength', varz.difficulty))
+        click.echo('%-20s: %s' % (key, val))
+    click.echo('%-20s: %s' % ('Strength', varz.difficulty))
 
     httpd.Stop()
 
