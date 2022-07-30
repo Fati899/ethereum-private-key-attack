@@ -104,26 +104,33 @@ def EchoHeader():
               is_flag=True,
               default=False,
               help='Disable monitoring port.')
-@click.option('--use-trie/--no-trie',
-              is_flag=True,
-              default=False,
-              help='Use legacy address finder.')              
+@click.option('--strategy',
+              type=click.Choice(['trie', 'nearest', 'bisect'], case_sensitive=False),
+              default='nearest',
+              help='Choose a lookup strategy for eth addresses')
 @click.option('--quiet',
               default=False,
               is_flag=True,
               help='Skip the animation')
 @click.argument('eth_address', nargs=-1)
 @click.command()
-def main(fps, timeout, addresses, port, no_port, use_trie, quiet, eth_address):
+def main(fps, timeout, addresses, port, no_port, strategy, quiet, eth_address):
     if eth_address:
         click.echo('Attacking specific ETH addresses: ', nl=False)
         addresses = [address.lower() for address in eth_address]
     else:
         click.echo('Loading known public ETH addresses: ', nl=False)
-    lookup_strategy = lookups.Trie if use_trie else lookups.NearestDict
-    target_addresses = lookup_strategy(targets.targets(addresses))
-    click.echo('%d found (%s bytes).\n' % (len(target_addresses),
-                                           target_addresses.sizeof()))
+
+    strategy_ctor = lookups.PickStrategy(strategy)
+    start_of_load = time.perf_counter()
+    target_addresses = strategy_ctor(targets.targets(addresses))
+    load_time = time.perf_counter() - start_of_load
+    click.echo('%d addresses read in %-3.2f seconds.' % (len(target_addresses), load_time))
+    click.echo('Using "%s" strategy, consuming %s bytes (%-8.5f bytes/address).' % (
+        strategy_ctor.__name__,
+        target_addresses.sizeof(),
+        len(target_addresses) / float(target_addresses.sizeof())))
+    click.echo('')
 
     httpd = monitoring.Server()
     varz = httpd.Start('', 0 if no_port else port)
