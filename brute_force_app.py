@@ -26,13 +26,6 @@ ETH_ADDRESS_LENGTH = 40
 
 def calc_strength(guess, target) -> int:
     """Calculate the strength of an address guess"""
-    for matching_digits, (lhs, rhs) in enumerate(zip(guess, target)):
-        if lhs != rhs:
-            return matching_digits
-
-
-def calc_strength(guess, target) -> int:
-    """Calculate the strength of an address guess"""
     strength = 0
     for lhs, rhs in zip(guess, target):
         strength += 1 if lhs == rhs else 0
